@@ -1,6 +1,10 @@
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+
 const API_URL = 'https://empllo.com/api/v1';
 
 export interface Job {
+  id: string;
   title: string;
   mainCategory: string;
   companyName: string;
@@ -30,7 +34,14 @@ export const fetchJobs = async (limit: number = 10, offset: number = 0): Promise
       throw new Error(`API request failed with status ${response.status}`);
     }
     const data: JobsResponse = await response.json();
-    return data;
+    const jobsWithIds = data.jobs.map(job => ({
+      ...job,
+      id: uuidv4(),
+    }));
+    return {
+      ...data,
+      jobs: jobsWithIds,
+    };
   } catch (error) {
     console.error('Error fetching jobs:', error);
     throw error;

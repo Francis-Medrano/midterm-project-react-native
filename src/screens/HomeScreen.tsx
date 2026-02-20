@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
 import { fetchJobs, Job } from '../api/jobsApi';
 import { homeScreenStyles as styles } from '../shared/styles/HomeScreenStyles';
+import JobDetailScreen from './JobDetailScreen';
 
 export default function HomeScreen() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -26,7 +28,11 @@ export default function HomeScreen() {
   }, []);
 
   const renderJobCard = ({ item }: { item: Job }) => (
-    <View style={styles.jobCard}>
+    <TouchableOpacity 
+      style={styles.jobCard}
+      onPress={() => setSelectedJob(item)}
+      activeOpacity={0.7}
+    >
       <Text style={styles.jobTitle}>{item.title}</Text>
       <Text style={styles.companyName}>{item.companyName}</Text>
       <View style={styles.jobMeta}>
@@ -43,38 +49,47 @@ export default function HomeScreen() {
         </Text>
       )}
       <Text style={styles.jobCategory}>{item.mainCategory}</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Job Listings</Text>
-        <Text style={styles.subtitle}>From Empllo API</Text>
-      </View>
-
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading jobs...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error}</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={jobs}
-          renderItem={renderJobCard}
-          keyExtractor={(item, index) => index.toString()}
-          scrollEnabled={false}
-          contentContainerStyle={styles.listContent}
+    <>
+      {selectedJob ? (
+        <JobDetailScreen 
+          job={selectedJob} 
+          onBack={() => setSelectedJob(null)} 
         />
-      )}
+      ) : (
+        <ScrollView style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Job Listings</Text>
+            <Text style={styles.subtitle}>From Empllo API</Text>
+          </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2026 Job Finder App</Text>
-      </View>
-    </ScrollView>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.loadingText}>Loading jobs...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Error: {error}</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={jobs}
+              renderItem={renderJobCard}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listContent}
+            />
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© 2026 Job Finder App</Text>
+          </View>
+        </ScrollView>
+      )}
+    </>
   );
 }
