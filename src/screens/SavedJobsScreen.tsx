@@ -1,29 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useSavedJobs } from '../shared/context/SavedJobsContext';
 import { homeScreenStyles as styles } from '../shared/styles/HomeScreenStyles';
 import { buttonStyles } from '../shared/styles/ButtonStyles';
+import ApplicationFormScreen from './ApplicationFormScreen';
 
 interface SavedJobsScreenProps {
   allJobs: any[];
   onBack: () => void;
   onJobSelect: (job: any) => void;
+  onApply: (job: any) => void;
 }
 
-export default function SavedJobsScreen({ allJobs, onBack, onJobSelect }: SavedJobsScreenProps) {
+export default function SavedJobsScreen({ allJobs, onBack, onJobSelect, onApply }: SavedJobsScreenProps) {
   const { savedJobIds, unsaveJob } = useSavedJobs();
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [applicationJob, setApplicationJob] = useState<any>(null);
 
   const savedJobs = useMemo(() => {
     return allJobs.filter(job => savedJobIds.has(job.id));
   }, [allJobs, savedJobIds]);
 
-  const handleApply = (job: any) => {
-    Alert.alert(
-      'Apply to Job',
-      `Redirecting to ${job.companyName} application...`,
-      [{ text: 'OK' }]
-    );
-    console.log('Opening:', job.applicationLink);
+  const handleApplyClick = (job: any) => {
+    setApplicationJob(job);
+    setShowApplicationForm(true);
   };
 
   const handleUnsaveJob = (jobId: string, jobTitle: string) => {
@@ -59,7 +59,7 @@ export default function SavedJobsScreen({ allJobs, onBack, onJobSelect }: SavedJ
         <View style={buttonStyles.cardButtonContainer}>
           <TouchableOpacity 
             style={buttonStyles.cardApplyButton}
-            onPress={() => handleApply(item)}
+            onPress={() => handleApplyClick(item)}
           >
             <Text style={buttonStyles.cardButtonText}>Apply</Text>
           </TouchableOpacity>
@@ -75,35 +75,46 @@ export default function SavedJobsScreen({ allJobs, onBack, onJobSelect }: SavedJ
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.savedJobsBackButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Saved Jobs</Text>
-      </View>
-
-      {savedJobs.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No saved jobs yet</Text>
-          <Text style={styles.emptySubtext}>Save jobs to view them here</Text>
-        </View>
+    <>
+      {showApplicationForm && applicationJob ? (
+        <ApplicationFormScreen 
+          job={applicationJob} 
+          onBack={() => setShowApplicationForm(false)}
+          onSubmitSuccess={onBack}
+          isFromSavedJobs={true}
+        />
       ) : (
-        <>
-          <Text style={styles.savedJobsCount}>{savedJobs.length} saved job{savedJobs.length !== 1 ? 's' : ''}</Text>
-          <FlatList
-            data={savedJobs}
-            renderItem={renderJobCard}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            contentContainerStyle={styles.listContent}
-          />
-        </>
-      )}
+        <ScrollView style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onBack} style={styles.savedJobsBackButton}>
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Saved Jobs</Text>
+          </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2026 Job Finder App</Text>
-      </View>
-    </ScrollView>
+          {savedJobs.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No saved jobs yet</Text>
+              <Text style={styles.emptySubtext}>Save jobs to view them here</Text>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.savedJobsCount}>{savedJobs.length} saved job{savedJobs.length !== 1 ? 's' : ''}</Text>
+              <FlatList
+                data={savedJobs}
+                renderItem={renderJobCard}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                contentContainerStyle={styles.listContent}
+              />
+            </>
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© 2026 Job Finder App</Text>
+          </View>
+        </ScrollView>
+      )}
+    </>
   );
 }

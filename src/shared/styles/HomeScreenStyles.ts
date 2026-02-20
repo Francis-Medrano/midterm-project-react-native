@@ -212,4 +212,32 @@ export const homeScreenStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  paginationArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paginationArrowText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  pageNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    minWidth: 50,
+    textAlign: 'center',
+  },
 });
