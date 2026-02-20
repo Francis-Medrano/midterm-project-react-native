@@ -7,8 +7,14 @@ export const homeScreenStyles = StyleSheet.create({
   },
   header: {
     padding: 24,
+    paddingTop: 32,
     backgroundColor: '#007AFF',
-    alignItems: 'center',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
   },
   title: {
     fontSize: 28,
@@ -24,16 +30,21 @@ export const homeScreenStyles = StyleSheet.create({
   listContent: {
     padding: 16,
   },
+  jobCardWrapper: {
+    marginBottom: 12,
+  },
   jobCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  jobCardContent: {
+    padding: 16,
   },
   jobTitle: {
     fontSize: 16,
@@ -113,6 +124,25 @@ export const homeScreenStyles = StyleSheet.create({
     color: '#d32f2f',
     fontSize: 14,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    minHeight: 300,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
   footer: {
     padding: 16,
     alignItems: 'center',
@@ -123,5 +153,63 @@ export const homeScreenStyles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     color: '#999',
+  },
+  savedJobsButton: {
+    position: 'relative',
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+  },
+  savedJobsButtonText: {
+    fontSize: 24,
+  },
+  savedJobsBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#ff4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  savedJobsBackButton: {
+    paddingRight: 16,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  savedJobsCount: {
+    fontSize: 14,
+    color: '#666',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    fontWeight: '500',
+  },
+  savedJobCardContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  unsaveButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  unsaveButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

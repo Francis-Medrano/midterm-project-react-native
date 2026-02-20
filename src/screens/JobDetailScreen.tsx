@@ -1,6 +1,8 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Job } from '../api/jobsApi';
+import { styles } from '../shared/styles/JobDetailScreenStyles';
+import { useSavedJobs } from '../shared/context/SavedJobsContext';
 
 interface JobDetailScreenProps {
   job: Job;
@@ -8,6 +10,20 @@ interface JobDetailScreenProps {
 }
 
 export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
+  const { saveJob, unsaveJob, isSaved } = useSavedJobs();
+  const [isJobSaved, setIsJobSaved] = useState(isSaved(job.id));
+
+  const handleSaveJob = () => {
+    if (isJobSaved) {
+      unsaveJob(job.id);
+      setIsJobSaved(false);
+      Alert.alert('Job Unsaved', `"${job.title}" has been removed from your saved jobs.`);
+    } else {
+      saveJob(job.id);
+      setIsJobSaved(true);
+      Alert.alert('Job Saved', `"${job.title}" has been added to your saved jobs.`);
+    }
+  };
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -82,6 +98,13 @@ export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
           >
             <Text style={styles.applyButtonText}>Apply Now</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.applyButton, { marginTop: 10, backgroundColor: isJobSaved ? '#4CAF50' : '#2196F3' }]}
+            onPress={handleSaveJob}
+          >
+            <Text style={styles.applyButtonText}>{isJobSaved ? 'Saved' : 'Save Job'}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
@@ -91,116 +114,3 @@ export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#007AFF',
-    paddingTop: 16,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginBottom: 12,
-    paddingVertical: 8,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  content: {
-    padding: 16,
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
-  },
-  companyName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#007AFF',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  label: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '600',
-    flex: 1,
-  },
-  value: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'right',
-  },
-  salaryBox: {
-    backgroundColor: '#e8f5e9',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#28a745',
-  },
-  salaryText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#28a745',
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  applyButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  footer: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    marginTop: 16,
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#999',
-  },
-});
