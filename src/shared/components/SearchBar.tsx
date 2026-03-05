@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Pressable } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../../theme/colors';
 
 interface SearchBarProps {
   value: string;
@@ -14,28 +16,31 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = 'Search jobs...',
   onClear,
 }) => {
+  const { themeMode } = useTheme();
+  const themeColors = themeMode === 'light' ? lightTheme : darkTheme;
+  
   const handleClear = () => {
     onChangeText('');
     onClear?.();
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.card }]}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: themeColors.text }]}
         placeholder={placeholder}
-        placeholderTextColor="#999"
+        placeholderTextColor={themeColors.placeholder}
         value={value}
         onChangeText={onChangeText}
         clearButtonMode="never"
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+        <Pressable onPress={handleClear} style={styles.clearButton}>
           <View style={styles.clearIcon}>
-            <View style={styles.line} />
-            <View style={[styles.line, styles.lineRotated]} />
+            <View style={[styles.line, { backgroundColor: themeColors.placeholder }]} />
+            <View style={[styles.line, styles.lineRotated, { backgroundColor: themeColors.placeholder }]} />
           </View>
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );
@@ -45,7 +50,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 8,
     marginHorizontal: 16,
     marginTop: 12,
@@ -61,7 +65,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#333',
   },
   clearButton: {
     padding: 8,
@@ -76,7 +79,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 14,
     height: 2,
-    backgroundColor: '#999',
   },
   lineRotated: {
     transform: [{ rotate: '90deg' }],

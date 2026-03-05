@@ -1,10 +1,12 @@
 import { StyleSheet } from 'react-native';
+import { Theme, lightTheme } from '../../theme/colors';
 
-export const homeScreenStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
+export const createHomeScreenStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
   header: {
     padding: 24,
     paddingTop: 32,
@@ -46,11 +48,26 @@ export const homeScreenStyles = StyleSheet.create({
   jobCardContent: {
     padding: 16,
   },
+  jobCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    gap: 12,
+  },
+  companyLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  jobCardTextWrapper: {
+    flex: 1,
+  },
   jobTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   companyName: {
     fontSize: 14,
@@ -236,8 +253,11 @@ export const homeScreenStyles = StyleSheet.create({
   pageNumber: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    minWidth: 50,
-    textAlign: 'center',
-  },
-});
+      color: theme.text,
+      minWidth: 50,
+      textAlign: 'center',
+    },
+  });
+
+// Fallback for backward compatibility
+export const homeScreenStyles = createHomeScreenStyles(lightTheme);

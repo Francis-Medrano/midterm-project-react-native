@@ -1,15 +1,23 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, FlatList, Alert, Pressable, Image } from 'react-native';
 import { fetchJobs, Job } from '../api/jobsApi';
-import { homeScreenStyles as styles } from '../shared/styles/HomeScreenStyles';
-import { buttonStyles } from '../shared/styles/ButtonStyles';
+import { createHomeScreenStyles } from '../shared/styles/HomeScreenStyles';
+import { createButtonStyles } from '../shared/styles/ButtonStyles';
 import JobDetailScreen from './JobDetailScreen';
 import SavedJobsScreen from './SavedJobsScreen';
 import ApplicationFormScreen from './ApplicationFormScreen';
 import { SearchBar } from '../shared/components/SearchBar';
 import { useSavedJobs } from '../shared/context/SavedJobsContext';
+import { useTheme } from '../shared/context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
+import { usePreventGoBack } from '../handler/usePreventGoBack';
 
 export default function HomeScreen() {
+  usePreventGoBack();
+  const { toggleTheme, themeMode } = useTheme();
+  const themeColors = themeMode === 'light' ? lightTheme : darkTheme;
+  const styles = createHomeScreenStyles(themeColors);
+  const buttonStyles = createButtonStyles(themeColors);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,42 +103,51 @@ export default function HomeScreen() {
     const isSaved = savedJobIds.has(item.id);
     return (
       <View style={styles.jobCardWrapper}>
-        <View style={styles.jobCard}>
-          <TouchableOpacity 
+        <View style={[styles.jobCard, { backgroundColor: themeColors.card }]}>
+          <Pressable 
             style={styles.jobCardContent}
             onPress={() => setSelectedJob(item)}
-            activeOpacity={0.7}
           >
-            <Text style={styles.jobTitle}>{item.title}</Text>
-            <Text style={styles.companyName}>{item.companyName}</Text>
+            <View style={styles.jobCardHeader}>
+              {item.companyLogo && (
+                <Image 
+                  source={{ uri: item.companyLogo }}
+                  style={styles.companyLogo}
+                />
+              )}
+              <View style={styles.jobCardTextWrapper}>
+                <Text style={[styles.jobTitle, { color: themeColors.text }]}>{item.title}</Text>
+                <Text style={[styles.companyName, { color: themeColors.primary }]}>{item.companyName}</Text>
+              </View>
+            </View>
             <View style={styles.jobMeta}>
-              <Text style={styles.jobMetaText}>{item.jobType}</Text>
-              <Text style={styles.jobMetaText}>{item.workModel}</Text>
+              <Text style={[styles.jobMetaText, { backgroundColor: themeColors.border, color: themeColors.placeholder }]}>{item.jobType}</Text>
+              <Text style={[styles.jobMetaText, { backgroundColor: themeColors.border, color: themeColors.placeholder }]}>{item.workModel}</Text>
             </View>
             <View style={styles.jobLocationLevel}>
-              <Text style={styles.jobLocation}>📍 {item.locations.join(', ')}</Text>
-              <Text style={styles.jobLevel}>{item.seniorityLevel}</Text>
+              <Text style={[styles.jobLocation, { color: themeColors.placeholder }]}>📍 {item.locations.join(', ')}</Text>
+              <Text style={[styles.jobLevel, { color: themeColors.placeholder }]}>{item.seniorityLevel}</Text>
             </View>
             {item.minSalary && item.maxSalary && (
               <Text style={styles.jobSalary}>
                 {item.currency} {item.minSalary.toLocaleString()} - {item.maxSalary.toLocaleString()}
               </Text>
             )}
-            <Text style={styles.jobCategory}>{item.mainCategory}</Text>
-          </TouchableOpacity>
+            <Text style={[styles.jobCategory, { backgroundColor: themeColors.secondary, color: themeColors.text }]}>{item.mainCategory}</Text>
+          </Pressable>
           <View style={buttonStyles.cardButtonContainer}>
-            <TouchableOpacity 
+            <Pressable 
               style={buttonStyles.cardApplyButton}
               onPress={() => handleApply(item)}
             >
               <Text style={buttonStyles.cardButtonText}>Apply</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
+            </Pressable>
+            <Pressable 
               style={[buttonStyles.cardSaveButton, { backgroundColor: isSaved ? '#4CAF50' : '#FF6B6B' }]}
               onPress={() => handleSaveJob(item, isSaved)}
             >
               <Text style={buttonStyles.cardButtonText}>{isSaved ? '✓ Saved' : '♡ Save'}</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -159,24 +176,32 @@ export default function HomeScreen() {
           onApply={handleApply}
         />
       ) : (
-        <ScrollView ref={scrollViewRef} style={styles.container}>
-          <View style={styles.header}>
+        <ScrollView ref={scrollViewRef} style={[styles.container, { backgroundColor: themeColors.background }]}>
+          <View style={[styles.header, { backgroundColor: themeColors.primary }]}>
             <View style={styles.headerContent}>
               <View>
                 <Text style={styles.title}>Job Listings</Text>
                 <Text style={styles.subtitle}>From Empllo API</Text>
               </View>
-              <TouchableOpacity 
-                style={styles.savedJobsButton}
-                onPress={() => setShowSavedJobs(true)}
-              >
-                <Text style={styles.savedJobsButtonText}>❤️</Text>
-                {savedJobIds.size > 0 && (
-                  <View style={styles.savedJobsBadge}>
-                    <Text style={styles.badgeText}>{savedJobIds.size}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                <Pressable
+                  style={styles.savedJobsButton}
+                  onPress={toggleTheme}
+                >
+                  <Text style={styles.savedJobsButtonText}>{themeMode === 'light' ? '🌙' : '☀️'}</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.savedJobsButton}
+                  onPress={() => setShowSavedJobs(true)}
+                >
+                  <Text style={styles.savedJobsButtonText}>❤️</Text>
+                  {savedJobIds.size > 0 && (
+                    <View style={styles.savedJobsBadge}>
+                      <Text style={styles.badgeText}>{savedJobIds.size}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              </View>
             </View>
           </View>
 
@@ -188,17 +213,17 @@ export default function HomeScreen() {
 
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.loadingText}>Loading jobs...</Text>
+              <ActivityIndicator size="large" color={themeColors.primary} />
+              <Text style={[styles.loadingText, { color: themeColors.text }]}>Loading jobs...</Text>
             </View>
           ) : error ? (
-            <View style={styles.errorContainer}>
+            <View style={[styles.errorContainer, { backgroundColor: themeColors.error }]}>
               <Text style={styles.errorText}>Error: {error}</Text>
             </View>
           ) : filteredJobs.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No jobs found</Text>
-              <Text style={styles.emptySubtext}>
+              <Text style={[styles.emptyText, { color: themeColors.text }]}>No jobs found</Text>
+              <Text style={[styles.emptySubtext, { color: themeColors.placeholder }]}>
                 {searchQuery ? 'Try adjusting your search' : 'Check back later'}
               </Text>
             </View>
@@ -213,28 +238,28 @@ export default function HomeScreen() {
               />
               {totalPages > 0 && (
                 <View style={styles.paginationContainer}>
-                  <TouchableOpacity 
-                    style={[styles.paginationArrow, { opacity: currentPage === 1 ? 0.5 : 1 }]}
+                  <Pressable 
+                    style={[styles.paginationArrow, { opacity: currentPage === 1 ? 0.5 : 1, backgroundColor: themeColors.primary }]}
                     onPress={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
                     <Text style={styles.paginationArrowText}>{'<'}</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.pageNumber}>{currentPage}</Text>
-                  <TouchableOpacity 
-                    style={[styles.paginationArrow, { opacity: currentPage === totalPages ? 0.5 : 1 }]}
+                  </Pressable>
+                  <Text style={[styles.pageNumber, { color: themeColors.text }]}>{currentPage}</Text>
+                  <Pressable 
+                    style={[styles.paginationArrow, { opacity: currentPage === totalPages ? 0.5 : 1, backgroundColor: themeColors.primary }]}
                     onPress={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
                     <Text style={styles.paginationArrowText}>{'>'}</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
             </>
           )}
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 Job Finder App</Text>
+          <View style={[styles.footer, { borderTopColor: themeColors.border }]}>
+            <Text style={[styles.footerText, { color: themeColors.placeholder }]}>© 2026 Job Finder App</Text>
           </View>
         </ScrollView>
       )}

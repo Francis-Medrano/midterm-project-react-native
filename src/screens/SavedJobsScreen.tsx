@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert, Pressable } from 'react-native';
 import { useSavedJobs } from '../shared/context/SavedJobsContext';
-import { homeScreenStyles as styles } from '../shared/styles/HomeScreenStyles';
-import { buttonStyles } from '../shared/styles/ButtonStyles';
+import { useTheme } from '../shared/context/ThemeContext';
+import { createHomeScreenStyles } from '../shared/styles/HomeScreenStyles';
+import { createButtonStyles } from '../shared/styles/ButtonStyles';
+import { lightTheme, darkTheme } from '../theme/colors';
 import ApplicationFormScreen from './ApplicationFormScreen';
+import { usePreventGoBack } from '../handler/usePreventGoBack';
 
 interface SavedJobsScreenProps {
   allJobs: any[];
@@ -13,7 +16,12 @@ interface SavedJobsScreenProps {
 }
 
 export default function SavedJobsScreen({ allJobs, onBack, onJobSelect, onApply }: SavedJobsScreenProps) {
+  usePreventGoBack();
   const { savedJobIds, unsaveJob } = useSavedJobs();
+  const { themeMode } = useTheme();
+  const themeColors = themeMode === 'light' ? lightTheme : darkTheme;
+  const styles = createHomeScreenStyles(themeColors);
+  const buttonStyles = createButtonStyles(themeColors);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [applicationJob, setApplicationJob] = useState<any>(null);
 
@@ -33,42 +41,41 @@ export default function SavedJobsScreen({ allJobs, onBack, onJobSelect, onApply 
 
   const renderJobCard = ({ item }: { item: any }) => (
     <View style={styles.jobCardWrapper}>
-      <View style={styles.jobCard}>
-        <TouchableOpacity 
+      <View style={[styles.jobCard, { backgroundColor: themeColors.card }]}>
+        <Pressable 
           style={styles.jobCardContent}
           onPress={() => onJobSelect(item)}
-          activeOpacity={0.7}
         >
-          <Text style={styles.jobTitle}>{item.title}</Text>
-          <Text style={styles.companyName}>{item.companyName}</Text>
+          <Text style={[styles.jobTitle, { color: themeColors.text }]}>{item.title}</Text>
+          <Text style={[styles.companyName, { color: themeColors.primary }]}>{item.companyName}</Text>
           <View style={styles.jobMeta}>
-            <Text style={styles.jobMetaText}>{item.jobType}</Text>
-            <Text style={styles.jobMetaText}>{item.workModel}</Text>
+            <Text style={[styles.jobMetaText, { backgroundColor: themeColors.border, color: themeColors.placeholder }]}>{item.jobType}</Text>
+            <Text style={[styles.jobMetaText, { backgroundColor: themeColors.border, color: themeColors.placeholder }]}>{item.workModel}</Text>
           </View>
           <View style={styles.jobLocationLevel}>
-            <Text style={styles.jobLocation}>📍 {item.locations.join(', ')}</Text>
-            <Text style={styles.jobLevel}>{item.seniorityLevel}</Text>
+            <Text style={[styles.jobLocation, { color: themeColors.placeholder }]}>📍 {item.locations.join(', ')}</Text>
+            <Text style={[styles.jobLevel, { color: themeColors.placeholder }]}>{item.seniorityLevel}</Text>
           </View>
           {item.minSalary && item.maxSalary && (
             <Text style={styles.jobSalary}>
               {item.currency} {item.minSalary.toLocaleString()} - {item.maxSalary.toLocaleString()}
             </Text>
           )}
-          <Text style={styles.jobCategory}>{item.mainCategory}</Text>
-        </TouchableOpacity>
+          <Text style={[styles.jobCategory, { backgroundColor: themeColors.secondary, color: themeColors.text }]}>{item.mainCategory}</Text>
+        </Pressable>
         <View style={buttonStyles.cardButtonContainer}>
-          <TouchableOpacity 
-            style={buttonStyles.cardApplyButton}
+          <Pressable 
+            style={[buttonStyles.cardApplyButton, { backgroundColor: themeColors.primary }]}
             onPress={() => handleApplyClick(item)}
           >
             <Text style={buttonStyles.cardButtonText}>Apply</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[buttonStyles.cardSaveButton, { backgroundColor: '#FF6B6B' }]}
+          </Pressable>
+          <Pressable
+            style={[buttonStyles.cardSaveButton, { backgroundColor: themeColors.error }]}
             onPress={() => handleUnsaveJob(item.id, item.title)}
           >
             <Text style={buttonStyles.cardButtonText}>✕ Unsave</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -84,22 +91,22 @@ export default function SavedJobsScreen({ allJobs, onBack, onJobSelect, onApply 
           isFromSavedJobs={true}
         />
       ) : (
-        <ScrollView style={styles.container}>
-          <View style={styles.header}>
+        <ScrollView style={[styles.container, { backgroundColor: themeColors.background }]}>
+          <View style={[styles.header, { backgroundColor: themeColors.primary }]}>
             <TouchableOpacity onPress={onBack} style={styles.savedJobsBackButton}>
               <Text style={styles.backButtonText}>← Back</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Saved Jobs</Text>
+            <Text style={[styles.title, { color: themeColors.text }]}>Saved Jobs</Text>
           </View>
 
           {savedJobs.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No saved jobs yet</Text>
-              <Text style={styles.emptySubtext}>Save jobs to view them here</Text>
+              <Text style={[styles.emptyText, { color: themeColors.text }]}>No saved jobs yet</Text>
+              <Text style={[styles.emptySubtext, { color: themeColors.placeholder }]}>Save jobs to view them here</Text>
             </View>
           ) : (
             <>
-              <Text style={styles.savedJobsCount}>{savedJobs.length} saved job{savedJobs.length !== 1 ? 's' : ''}</Text>
+              <Text style={[styles.savedJobsCount, { color: themeColors.text }]}>{savedJobs.length} saved job{savedJobs.length !== 1 ? 's' : ''}</Text>
               <FlatList
                 data={savedJobs}
                 renderItem={renderJobCard}
@@ -110,8 +117,8 @@ export default function SavedJobsScreen({ allJobs, onBack, onJobSelect, onApply 
             </>
           )}
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 Job Finder App</Text>
+          <View style={[styles.footer, { borderTopColor: themeColors.border }]}>
+            <Text style={[styles.footerText, { color: themeColors.placeholder }]}>© 2026 Job Finder App</Text>
           </View>
         </ScrollView>
       )}

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TextInput, Modal, Pressable } from 'react-native';
 import { Job } from '../api/jobsApi';
-import { formStyles } from '../shared/styles/FormStyles';
+import { createFormStyles } from '../shared/styles/FormStyles';
+import { useTheme } from '../shared/context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
+import { usePreventGoBack } from '../handler/usePreventGoBack';
 
 interface ApplicationFormScreenProps {
   job: Job;
@@ -16,11 +19,21 @@ export default function ApplicationFormScreen({
   onSubmitSuccess,
   isFromSavedJobs = false,
 }: ApplicationFormScreenProps) {
+  usePreventGoBack();
+  const { themeMode } = useTheme();
+  const themeColors = themeMode === 'light' ? lightTheme : darkTheme;
+  const formStyles = createFormStyles(themeColors);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     contactNumber: '',
     whyHireYou: '',
+  });
+  const [touched, setTouched] = useState({
+    name: false,
+    email: false,
+    contactNumber: false,
+    whyHireYou: false,
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -31,31 +44,43 @@ export default function ApplicationFormScreen({
     }));
   };
 
-  const handleSubmit = () => {
-    if (!formData.name.trim()) {
-      Alert.alert('Validation Error', 'Please enter your name');
-      return;
-    }
-    if (!formData.email.trim()) {
-      Alert.alert('Validation Error', 'Please enter your email');
-      return;
-    }
-    if (!formData.contactNumber.trim()) {
-      Alert.alert('Validation Error', 'Please enter your contact number');
-      return;
-    }
-    if (!formData.whyHireYou.trim()) {
-      Alert.alert('Validation Error', 'Please enter why should we hire you');
-      return;
-    }
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({
+      ...prev,
+      [field]: true,
+    }));
+  };
 
-    // Validate email format
+  const isFormValid = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address');
-      return;
-    }
+    const contactNumberRegex = /^09\d{9}$/;
+    return (
+      formData.name.trim() !== '' &&
+      formData.email.trim() !== '' &&
+      emailRegex.test(formData.email) &&
+      formData.contactNumber.trim() !== '' &&
+      contactNumberRegex.test(formData.contactNumber) &&
+      formData.whyHireYou.trim() !== ''
+    );
+  };
 
+  const isContactNumberValid = () => {
+    if (formData.contactNumber.trim() === '') return true;
+    return formData.contactNumber.startsWith('09');
+  };
+
+  const isEmailValid = () => {
+    if (formData.email.trim() === '') return true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(formData.email);
+  };
+
+  const hasNameError = () => touched.name && formData.name.trim() === '';
+  const hasEmailError = () => touched.email && formData.email.trim() === '';
+  const hasContactNumberError = () => touched.contactNumber && formData.contactNumber.trim() === '';
+  const hasWhyHireYouError = () => touched.whyHireYou && formData.whyHireYou.trim() === '';
+
+  const handleSubmit = () => {
     // Show success modal
     setShowSuccessModal(true);
     console.log('Application submitted:', {
@@ -78,67 +103,110 @@ export default function ApplicationFormScreen({
   };
 
   return (
-    <ScrollView style={formStyles.container}>
-      <View style={formStyles.header}>
-        <TouchableOpacity onPress={onBack} style={formStyles.backButton}>
+    <ScrollView style={[formStyles.container, { backgroundColor: themeColors.background }]}>
+      <View style={[formStyles.header, { backgroundColor: themeColors.primary }]}>
+        <Pressable onPress={onBack} style={formStyles.backButton}>
           <Text style={formStyles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={formStyles.title}>Apply Now</Text>
+        </Pressable>
+        <Text style={[formStyles.title, { color: themeColors.text }]}>Apply Now</Text>
       </View>
 
-      <View style={formStyles.content}>
+      <View style={[formStyles.content, { backgroundColor: themeColors.background }]}>
         {/* Job Info */}
-        <View style={formStyles.jobInfoSection}>
-          <Text style={formStyles.jobTitle}>{job.title}</Text>
-          <Text style={formStyles.companyName}>{job.companyName}</Text>
+        <View style={[formStyles.jobInfoSection, { backgroundColor: themeColors.card }]}>
+          <Text style={[formStyles.jobTitle, { color: themeColors.text }]}>{job.title}</Text>
+          <Text style={[formStyles.companyName, { color: themeColors.primary }]}>{job.companyName}</Text>
         </View>
 
         {/* Form */}
         <View style={formStyles.formSection}>
-          <Text style={formStyles.label}>Full Name *</Text>
+          <Text style={[formStyles.label, { color: themeColors.text }]}>Full Name *</Text>
           <TextInput
-            style={formStyles.input}
+            style={[formStyles.input, { backgroundColor: themeColors.card, color: themeColors.text, borderColor: themeColors.border }]}
             placeholder="Enter your full name"
+            placeholderTextColor={themeColors.placeholder}
             value={formData.name}
             onChangeText={(value) => handleInputChange('name', value)}
-            placeholderTextColor="#999"
+            onBlur={() => handleBlur('name')}
           />
+          {hasNameError() && (
+            <Text style={{ color: themeColors.error, fontSize: 12, marginTop: 5 }}>
+              Full name cannot be empty
+            </Text>
+          )}
 
-          <Text style={formStyles.label}>Email Address *</Text>
+          <Text style={[formStyles.label, { color: themeColors.text }]}>Email Address *</Text>
           <TextInput
-            style={formStyles.input}
+            style={[formStyles.input, { backgroundColor: themeColors.card, color: themeColors.text, borderColor: themeColors.border }]}
             placeholder="Enter your email"
+            placeholderTextColor={themeColors.placeholder}
             value={formData.email}
             onChangeText={(value) => handleInputChange('email', value)}
+            onBlur={() => handleBlur('email')}
             keyboardType="email-address"
-            placeholderTextColor="#999"
           />
+          {hasEmailError() && (
+            <Text style={{ color: themeColors.error, fontSize: 12, marginTop: 5 }}>
+              Email cannot be empty
+            </Text>
+          )}
+          {!isEmailValid() && formData.email.trim() !== '' && (
+            <Text style={{ color: themeColors.error, fontSize: 12, marginTop: 5 }}>
+              Email must contain @ symbol and be valid
+            </Text>
+          )}
 
-          <Text style={formStyles.label}>Contact Number *</Text>
+          <Text style={[formStyles.label, { color: themeColors.text }]}>Contact Number *</Text>
           <TextInput
-            style={formStyles.input}
+            style={[formStyles.input, { backgroundColor: themeColors.card, color: themeColors.text, borderColor: themeColors.border }]}
             placeholder="Enter your contact number"
+            placeholderTextColor={themeColors.placeholder}
             value={formData.contactNumber}
             onChangeText={(value) => handleInputChange('contactNumber', value)}
+            onBlur={() => handleBlur('contactNumber')}
             keyboardType="phone-pad"
-            placeholderTextColor="#999"
+            maxLength={11}
           />
+          {hasContactNumberError() && (
+            <Text style={{ color: themeColors.error, fontSize: 12, marginTop: 5 }}>
+              Contact number cannot be empty
+            </Text>
+          )}
+          {!isContactNumberValid() && formData.contactNumber.trim() !== '' && (
+            <Text style={{ color: themeColors.error, fontSize: 12, marginTop: 5 }}>
+              Contact number must start with 09
+            </Text>
+          )}
 
-          <Text style={formStyles.label}>Why should we hire you? *</Text>
+          <Text style={[formStyles.label, { color: themeColors.text }]}>Why should we hire you? *</Text>
           <TextInput
-            style={[formStyles.input, formStyles.textAreaInput]}
+            style={[formStyles.input, formStyles.textAreaInput, { backgroundColor: themeColors.card, color: themeColors.text, borderColor: themeColors.border }]}
             placeholder="Tell us why you're a great fit for this position..."
+            placeholderTextColor={themeColors.placeholder}
             value={formData.whyHireYou}
             onChangeText={(value) => handleInputChange('whyHireYou', value)}
+            onBlur={() => handleBlur('whyHireYou')}
             multiline
             numberOfLines={6}
             textAlignVertical="top"
-            placeholderTextColor="#999"
           />
+          {hasWhyHireYouError() && (
+            <Text style={{ color: themeColors.error, fontSize: 12, marginTop: 5 }}>
+              This field cannot be empty
+            </Text>
+          )}
 
-          <TouchableOpacity style={formStyles.submitButton} onPress={handleSubmit}>
+          <Pressable 
+            style={[
+              formStyles.submitButton,
+              { backgroundColor: themeColors.primary },
+              !isFormValid() && { opacity: 0.5 }
+            ]} 
+            onPress={handleSubmit}
+            disabled={!isFormValid()}
+          >
             <Text style={formStyles.submitButtonText}>Submit Application</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
@@ -150,18 +218,18 @@ export default function ApplicationFormScreen({
         onRequestClose={() => setShowSuccessModal(false)}
       >
         <View style={formStyles.modalOverlay}>
-          <View style={formStyles.modalContent}>
-            <Text style={formStyles.successTitle}>Application Submitted!</Text>
-            <Text style={formStyles.successMessage}>
+          <View style={[formStyles.modalContent, { backgroundColor: themeColors.card }]}>
+            <Text style={[formStyles.successTitle, { color: themeColors.success }]}>Application Submitted!</Text>
+            <Text style={[formStyles.successMessage, { color: themeColors.text }]}>
               Thank you for applying to {job.title} at {job.companyName}. We will review your
               application and get back to you soon.
             </Text>
-            <TouchableOpacity
-              style={formStyles.modalButton}
+            <Pressable
+              style={[formStyles.modalButton, { backgroundColor: themeColors.primary }]}
               onPress={handleSuccessConfirm}
             >
               <Text style={formStyles.modalButtonText}>Okay</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Modal>
