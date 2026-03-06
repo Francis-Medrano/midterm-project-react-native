@@ -5,12 +5,14 @@ import { createFormStyles } from '../shared/styles/FormStyles';
 import { useTheme } from '../shared/context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { usePreventGoBack } from '../handler/usePreventGoBack';
+import { AppHeader } from '../shared/components/AppHeader';
 
 interface ApplicationFormScreenProps {
   job: Job;
   onBack: () => void;
   onSubmitSuccess: () => void;
   isFromSavedJobs?: boolean;
+  onSavedJobsPress?: () => void;
 }
 
 export default function ApplicationFormScreen({
@@ -18,6 +20,7 @@ export default function ApplicationFormScreen({
   onBack,
   onSubmitSuccess,
   isFromSavedJobs = false,
+  onSavedJobsPress,
 }: ApplicationFormScreenProps) {
   usePreventGoBack();
   const { themeMode } = useTheme();
@@ -104,12 +107,7 @@ export default function ApplicationFormScreen({
 
   return (
     <ScrollView style={[formStyles.container, { backgroundColor: themeColors.background }]}>
-      <View style={[formStyles.header, { backgroundColor: themeColors.primary }]}>
-        <Pressable onPress={onBack} style={formStyles.backButton}>
-          <Text style={formStyles.backButtonText}>← Back</Text>
-        </Pressable>
-        <Text style={[formStyles.title, { color: themeColors.text }]}>Apply Now</Text>
-      </View>
+      <AppHeader title="Apply Now" onBackPress={onBack} showBack={true} onSavedJobsPress={onSavedJobsPress} />
 
       <View style={[formStyles.content, { backgroundColor: themeColors.background }]}>
         {/* Job Info */}

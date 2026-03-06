@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import HomeScreen from './src/screens/HomeScreen';
+import AppNavigation from './src/navigation/AppNavigation';
 import { SavedJobsProvider } from './src/shared/context/SavedJobsContext';
 import { ThemeProvider } from './src/shared/context/ThemeContext';
 
@@ -7,7 +7,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <SavedJobsProvider>
-        <HomeScreen />
+        <AppNavigation />
         <StatusBar style="auto" />
       </SavedJobsProvider>
     </ThemeProvider>

@@ -1,7 +1,8 @@
 import 'react-native-get-random-values';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, v5 as uuidv5 } from 'uuid';
 
 const API_URL = 'https://empllo.com/api/v1';
+const NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // Standard namespace UUID
 
 export interface Job {
   id: string;
@@ -34,10 +35,16 @@ export const fetchJobs = async (limit: number = 10, offset: number = 0): Promise
       throw new Error(`API request failed with status ${response.status}`);
     }
     const data: JobsResponse = await response.json();
-    const jobsWithIds = data.jobs.map(job => ({
-      ...job,
-      id: uuidv4(),
-    }));
+    const jobsWithIds = data.jobs.map(job => {
+      // Generate a consistent UUID based on job title and company name
+      // This ensures the same job always gets the same ID
+      const jobIdentifier = `${job.title}-${job.companyName}-${job.locations.join(',')}`;
+      const consistentId = uuidv5(jobIdentifier, NAMESPACE);
+      return {
+        ...job,
+        id: job.id || consistentId, // Use existing ID if available, otherwise use generated one
+      };
+    });
     return {
       ...data,
       jobs: jobsWithIds,

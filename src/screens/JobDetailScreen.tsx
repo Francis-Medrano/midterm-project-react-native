@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, Alert, Pressable } from 'react-native';
 import { Job } from '../api/jobsApi';
 import { createJobDetailStyles } from '../shared/styles/JobDetailScreenStyles';
@@ -6,41 +6,131 @@ import { useSavedJobs } from '../shared/context/SavedJobsContext';
 import { useTheme } from '../shared/context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { usePreventGoBack } from '../handler/usePreventGoBack';
+import { AppHeader } from '../shared/components/AppHeader';
 
 interface JobDetailScreenProps {
   job: Job;
   onBack: () => void;
+  onSavedJobsPress?: () => void;
+  onApplyPress?: () => void;
 }
 
-export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
+// Helper function to parse and render HTML description
+const parseHtmlDescription = (html: string, themeColors: any) => {
+  if (!html) return null;
+
+  // Split by <h3> tags to get sections
+  const sections: React.ReactNode[] = [];
+  const h3Regex = /<h3[^>]*>(.*?)<\/h3>(.*?)(?=<h3|$)/gs;
+  let match;
+
+  while ((match = h3Regex.exec(html)) !== null) {
+    const title = match[1].replace(/<[^>]*>/g, '');
+    const content = match[2];
+
+    sections.push(
+      <View key={title} style={{ marginBottom: 16 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: themeColors.text, marginBottom: 12 }}>
+          {title}
+        </Text>
+        {/* Parse list items */}
+        {content.split(/<li>/g).slice(1).map((item: string, index: number) => {
+          const text = item.replace(/<\/li>/g, '').replace(/<[^>]*>/g, '').trim();
+          if (!text) return null;
+          return (
+            <View key={index} style={{ flexDirection: 'row', marginBottom: 8 }}>
+              <Text style={{ color: themeColors.cardText, marginRight: 8 }}>•</Text>
+              <Text 
+                style={{ 
+                  color: themeColors.cardText, 
+                  flex: 1, 
+                  lineHeight: 20,
+                  fontSize: 14 
+                }}
+              >
+                {text}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
+
+  return sections.length > 0 ? sections : null;
+};
+
+export default function JobDetailScreen({ job, onBack, onSavedJobsPress, onApplyPress }: JobDetailScreenProps) {
   usePreventGoBack();
   const { saveJob, unsaveJob, isSaved } = useSavedJobs();
   const { themeMode } = useTheme();
   const themeColors = themeMode === 'light' ? lightTheme : darkTheme;
   const styles = createJobDetailStyles(themeColors);
-  const [isJobSaved, setIsJobSaved] = useState(isSaved(job.id));
+  const isJobSaved = isSaved(job.id);
 
   const handleSaveJob = () => {
     if (isJobSaved) {
       unsaveJob(job.id);
-      setIsJobSaved(false);
       Alert.alert('Job Unsaved', `"${job.title}" has been removed from your saved jobs.`);
     } else {
-      saveJob(job.id);
-      setIsJobSaved(true);
+      saveJob(job);
       Alert.alert('Job Saved', `"${job.title}" has been added to your saved jobs.`);
     }
   };
   return (
     <ScrollView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <View style={[styles.header, { backgroundColor: themeColors.primary }]}>
-        <Pressable onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: themeColors.text }]}>{job.title}</Text>
-      </View>
+      <AppHeader title={job.title} onBackPress={onBack} showBack={true} onSavedJobsPress={onSavedJobsPress} />
 
       <View style={[styles.content, { backgroundColor: themeColors.background }]}>
+        {/* Info Chips Section */}
+        <View style={styles.infoChipsContainer}>
+          <View style={[styles.infoChip, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Text style={styles.chipIcon}>⏰</Text>
+            <View>
+              <Text style={[styles.chipLabel, { color: themeColors.placeholder }]}>Added</Text>
+              <Text style={[styles.chipValue, { color: themeColors.text }]}>14 minutes ago</Text>
+            </View>
+          </View>
+
+          <View style={[styles.infoChip, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Text style={styles.chipIcon}>📍</Text>
+            <View>
+              <Text style={[styles.chipLabel, { color: themeColors.placeholder }]}>Location</Text>
+              <Text style={[styles.chipValue, { color: themeColors.text }]}>{job.locations[0] || 'Not specified'}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.infoChip, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Text style={styles.chipIcon}>🏢</Text>
+            <View>
+              <Text style={[styles.chipLabel, { color: themeColors.placeholder }]}>Type</Text>
+              <Text style={[styles.chipValue, { color: themeColors.text }]}>{job.jobType}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.infoChip, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Text style={styles.chipIcon}>💼</Text>
+            <View>
+              <Text style={[styles.chipLabel, { color: themeColors.placeholder }]}>Salary</Text>
+              <Text style={[styles.chipValue, { color: themeColors.text }]}>
+                {job.minSalary && job.maxSalary ? `${job.currency} ${job.minSalary.toLocaleString()}` : 'Not provided'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Related Skills Section */}
+        <View style={styles.skillsSection}>
+          <Text style={[styles.skillsTitle, { color: themeColors.text }]}>Related skills</Text>
+          <View style={styles.skillsContainer}>
+            {['security', 'cloud', 'aws', 'monitoring', 'itil'].map((skill, index) => (
+              <View key={index} style={[styles.skillTag, { backgroundColor: themeColors.background, borderColor: themeColors.primary }]}>
+                <Text style={[styles.skillTagText, { color: themeColors.primary }]}>{skill}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
         {/* Company Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Company</Text>
@@ -68,12 +158,6 @@ export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
           </View>
         </View>
 
-        {/* Location Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Location</Text>
-          <Text style={[styles.value, { color: themeColors.cardText }]}>{job.locations.join(', ')}</Text>
-        </View>
-
         {/* Salary Section */}
         {job.minSalary && job.maxSalary && (
           <View style={styles.section}>
@@ -89,8 +173,7 @@ export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
         {/* Description Section */}
         {job.description && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Description</Text>
-            <Text style={[styles.description, { color: themeColors.cardText }]}>{job.description.replace(/<[^>]*>/g, '')}</Text>
+            {parseHtmlDescription(job.description, themeColors)}
           </View>
         )}
 
@@ -98,10 +181,7 @@ export default function JobDetailScreen({ job, onBack }: JobDetailScreenProps) {
         <View style={styles.section}>
           <Pressable
             style={[styles.applyButton, { backgroundColor: themeColors.primary }]}
-            onPress={() => {
-              // In a real app, you would use Linking to open the URL
-              console.log('Opening:', job.applicationLink);
-            }}
+            onPress={onApplyPress}
           >
             <Text style={styles.applyButtonText}>Apply Now</Text>
           </Pressable>

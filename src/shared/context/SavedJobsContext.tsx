@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Job } from '../../api/jobsApi';
 
 interface SavedJobsContextType {
   savedJobIds: Set<string>;
-  saveJob: (jobId: string) => void;
+  savedJobs: Map<string, Job>;
+  saveJob: (job: Job) => void;
   unsaveJob: (jobId: string) => void;
   isSaved: (jobId: string) => boolean;
 }
@@ -11,9 +13,20 @@ const SavedJobsContext = createContext<SavedJobsContextType | undefined>(undefin
 
 export const SavedJobsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
+  const [savedJobs, setSavedJobs] = useState<Map<string, Job>>(new Map());
 
-  const saveJob = useCallback((jobId: string) => {
-    setSavedJobIds(prev => new Set(prev).add(jobId));
+  const saveJob = useCallback((job: Job) => {
+    setSavedJobIds(prev => {
+      if (prev.has(job.id)) return prev;
+      return new Set(prev).add(job.id);
+    });
+    setSavedJobs(prev => {
+      const newMap = new Map(prev);
+      if (!newMap.has(job.id)) {
+        newMap.set(job.id, job);
+      }
+      return newMap;
+    });
   }, []);
 
   const unsaveJob = useCallback((jobId: string) => {
@@ -22,6 +35,11 @@ export const SavedJobsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       newSet.delete(jobId);
       return newSet;
     });
+    setSavedJobs(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(jobId);
+      return newMap;
+    });
   }, []);
 
   const isSaved = useCallback((jobId: string) => {
@@ -29,7 +47,7 @@ export const SavedJobsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [savedJobIds]);
 
   return (
-    <SavedJobsContext.Provider value={{ savedJobIds, saveJob, unsaveJob, isSaved }}>
+    <SavedJobsContext.Provider value={{ savedJobIds, savedJobs, saveJob, unsaveJob, isSaved }}>
       {children}
     </SavedJobsContext.Provider>
   );
