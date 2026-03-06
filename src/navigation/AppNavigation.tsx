@@ -10,6 +10,7 @@ export interface NavigationState {
   applicationJob: Job | null;
   selectedJob: Job | null;
   showSavedJobs: boolean;
+  isFormFromSavedJobs: boolean;
 }
 
 export const AppNavigation = () => {
@@ -18,6 +19,7 @@ export const AppNavigation = () => {
     applicationJob: null,
     selectedJob: null,
     showSavedJobs: false,
+    isFormFromSavedJobs: false,
   });
   const [allJobs, setAllJobs] = useState<Job[]>([]);
 
@@ -46,6 +48,7 @@ export const AppNavigation = () => {
       ...prev,
       applicationJob: job,
       showApplicationForm: true,
+      isFormFromSavedJobs: prev.showSavedJobs,
     }));
   };
 
@@ -63,6 +66,7 @@ export const AppNavigation = () => {
       showApplicationForm: false,
       applicationJob: null,
       selectedJob: null,
+      isFormFromSavedJobs: false,
       showSavedJobs: false,
     });
   };
@@ -74,7 +78,7 @@ export const AppNavigation = () => {
           job={navigationState.applicationJob}
           onBack={goBack}
           onSubmitSuccess={goBack}
-          isFromSavedJobs={false}
+          isFromSavedJobs={navigationState.isFormFromSavedJobs}
           onSavedJobsPress={navigateToSavedJobs}
         />
       ) : navigationState.selectedJob ? (
