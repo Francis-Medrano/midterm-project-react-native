@@ -71,6 +71,27 @@ export const AppNavigation = () => {
     });
   };
 
+  const goBackFromJobDetail = () => {
+    setNavigationState((prev) => {
+      if (prev.showSavedJobs) {
+        // Return to SavedJobs screen
+        return {
+          ...prev,
+          selectedJob: null,
+        };
+      } else {
+        // Return to HomeScreen
+        return {
+          showApplicationForm: false,
+          applicationJob: null,
+          selectedJob: null,
+          isFormFromSavedJobs: false,
+          showSavedJobs: false,
+        };
+      }
+    });
+  };
+
   return (
     <>
       {navigationState.showApplicationForm && navigationState.applicationJob ? (
@@ -84,7 +105,7 @@ export const AppNavigation = () => {
       ) : navigationState.selectedJob ? (
         <JobDetailScreen
           job={navigationState.selectedJob}
-          onBack={goBack}
+          onBack={goBackFromJobDetail}
           onSavedJobsPress={navigateToSavedJobs}
           onApplyPress={() => navigateToApplicationForm(navigationState.selectedJob!)}
         />
