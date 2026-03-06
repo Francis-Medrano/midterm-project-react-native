@@ -29,7 +29,7 @@ export default function HomeScreen({ onJobSelect, onApply, onSavedJobsPress }: H
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [offset, setOffset] = useState(0);
-  const { savedJobIds, saveJob } = useSavedJobs();
+  const { savedJobIds, saveJob, unsaveJob } = useSavedJobs();
 
   const JOBS_PER_PAGE = 10;
 
@@ -101,10 +101,12 @@ export default function HomeScreen({ onJobSelect, onApply, onSavedJobsPress }: H
 
   const handleSaveJob = (job: Job, alreadySaved: boolean) => {
     if (alreadySaved) {
-      return;
+      unsaveJob(job.id);
+      Alert.alert('Job Unsaved', `"${job.title}" has been removed from your saved jobs.`);
+    } else {
+      saveJob(job);
+      Alert.alert('Job Saved', `"${job.title}" has been added to your saved jobs.`);
     }
-    saveJob(job);
-    Alert.alert('Job Saved', `"${job.title}" has been added to your saved jobs.`);
   };
 
   const renderJobCard = ({ item }: { item: Job }) => {
@@ -151,11 +153,10 @@ export default function HomeScreen({ onJobSelect, onApply, onSavedJobsPress }: H
               <Text style={buttonStyles.cardButtonText}>Apply</Text>
             </Pressable>
             <Pressable 
-              style={[buttonStyles.cardSaveButton, { backgroundColor: isSaved ? '#4CAF50' : '#FF6B6B', opacity: isSaved ? 0.6 : 1 }]}
+              style={[buttonStyles.cardSaveButton, { backgroundColor: isSaved ? '#4CAF50' : '#FF6B6B' }]}
               onPress={() => handleSaveJob(item, isSaved)}
-              disabled={isSaved}
             >
-              <Text style={buttonStyles.cardButtonText}>{isSaved ? '✓ Saved' : '♡ Save'}</Text>
+              <Text style={buttonStyles.cardButtonText}>{isSaved ? 'Saved' : 'Save'}</Text>
             </Pressable>
           </View>
         </View>
