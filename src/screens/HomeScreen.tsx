@@ -57,7 +57,7 @@ export default function HomeScreen({ onJobSelect, onApply, onSavedJobsPress }: H
 
   // Load more jobs when scrolling
   const handleEndReached = async () => {
-    if (loadingMore || searchQuery.trim()) return; // Don't load more if already loading or searching
+    if (loadingMore) return; // Don't load more if already loading
 
     try {
       setLoadingMore(true);

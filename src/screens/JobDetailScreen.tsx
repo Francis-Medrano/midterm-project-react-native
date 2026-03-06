@@ -15,6 +15,28 @@ interface JobDetailScreenProps {
   onApplyPress?: () => void;
 }
 
+// Helper function to format time ago
+const formatTimeAgo = (timestamp: number) => {
+  const now = Math.floor(Date.now() / 1000); // Current time in seconds
+  const diffInSeconds = now - timestamp;
+
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  } else {
+    const weeks = Math.floor(diffInSeconds / 604800);
+    return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+  }
+};
+
 // Helper function to parse and render HTML description
 const parseHtmlDescription = (html: string, themeColors: any) => {
   if (!html) return null;
@@ -88,7 +110,7 @@ export default function JobDetailScreen({ job, onBack, onSavedJobsPress, onApply
             <Text style={styles.chipIcon}>⏰</Text>
             <View>
               <Text style={[styles.chipLabel, { color: themeColors.placeholder }]}>Added</Text>
-              <Text style={[styles.chipValue, { color: themeColors.text }]}>14 minutes ago</Text>
+              <Text style={[styles.chipValue, { color: themeColors.text }]}>{formatTimeAgo(job.pubDate)}</Text>
             </View>
           </View>
 
@@ -112,8 +134,12 @@ export default function JobDetailScreen({ job, onBack, onSavedJobsPress, onApply
             <Text style={styles.chipIcon}>💼</Text>
             <View>
               <Text style={[styles.chipLabel, { color: themeColors.placeholder }]}>Salary</Text>
-              <Text style={[styles.chipValue, { color: themeColors.text }]}>
-                {job.minSalary && job.maxSalary ? `${job.currency} ${job.minSalary.toLocaleString()}` : 'Not provided'}
+              <Text 
+                style={[styles.chipValue, { color: themeColors.text, fontSize: 9 }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {job.minSalary && job.maxSalary ? `${job.currency} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}` : 'Not provided'}
               </Text>
             </View>
           </View>
@@ -157,18 +183,6 @@ export default function JobDetailScreen({ job, onBack, onSavedJobsPress, onApply
             <Text style={[styles.value, { color: themeColors.cardText }]}>{job.mainCategory}</Text>
           </View>
         </View>
-
-        {/* Salary Section */}
-        {job.minSalary && job.maxSalary && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Salary</Text>
-            <View style={[styles.salaryBox, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.salaryText, { color: themeColors.success }]}>
-                {job.currency} {job.minSalary.toLocaleString()} - {job.maxSalary.toLocaleString()}
-              </Text>
-            </View>
-          </View>
-        )}
 
         {/* Description Section */}
         {job.description && (
